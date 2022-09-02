@@ -26,7 +26,9 @@ func main(){
 	router.GET("/albums", getAlbums)
 	router.GET("/albums/:id", getAlbumById)
 	router.POST("/albums", postAlbums)
-	
+	router.PATCH("/albums/:id", updateAlbumById)
+	router.DELETE("/albums/:id", deleteAlbumById)
+
 	router.Run("localhost:8080")
 }
 
@@ -51,13 +53,52 @@ func postAlbums(c *gin.Context){
 
 func getAlbumById(c *gin.Context){
 	id := c.Param("id")
-
+	
 	// Loop over the list of albums, looking for
     // an album whose ID value matches the parameter.
 
 	for _, album := range albums {
 		if id == album.ID{
 			c.IndentedJSON(http.StatusOK, album)
+			return
+		}
+	}
+
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No album matching"})
+
+}
+
+// updateAlbumById 
+func updateAlbumById(c *gin.Context){
+	id := c.Param("id")
+
+	//json update album
+	var updateAlbum album 
+	err := c.BindJSON(&updateAlbum)
+	if err != nil {
+		return
+	}
+	// Loop over all the albums and update the album object
+	for key, album := range albums{
+		if album.ID == id {
+			albums[key] = updateAlbum
+			c.IndentedJSON(http.StatusOK, albums)
+			return
+		}
+	}
+
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No album matching"})
+}
+
+// deleteAlbumById
+func deleteAlbumById(c *gin.Context){
+	id := c.Param("id")
+
+	for key, album := range albums{
+		if album.ID == id {
+
+			albums = append(albums[:key],albums[key+1:]...)
+			c.IndentedJSON(http.StatusOK, gin.H{"message": "Album Deleted"})
 			return
 		}
 	}
